@@ -6,6 +6,7 @@
  */
 
 #include "Buf.h"
+#include "exceptions/IndexOutOfBoundsException.h"
 #include <cstdlib>
 #include <cstring>
 
@@ -14,11 +15,13 @@
 using std::string;
 using std::bad_alloc;
 
-Buf::Buf() : Buf(256)
+
+
+Buf::Buf() : Buf(MEMBLOCK)
 {
 }
 
-Buf::Buf(size_t initialSize) : data((char*) malloc(initialSize)), readerIndex(0), writerIndex(0), allocedSize(initialSize)
+Buf::Buf(size_t initialSize) : bytes((char*) malloc(initialSize)), rIndex(0), wIndex(0), allocedSize(initialSize)
 {
 }
 
@@ -28,8 +31,10 @@ Buf::Buf(const Buf& orig)
 
 Buf::~Buf()
 {
-  free(data);
+  free(bytes);
 }
+
+//write functions
 
 void Buf::write(bool b)
 {
@@ -40,40 +45,39 @@ void Buf::write(char c)
 {
   checkWriteBound(sizeof (c));
 
-  data[writerIndex] = c;
-  writerIndex++;
+  bytes[wIndex++] = c;
 }
 
 void Buf::write(short s)
 {
   checkWriteBound(sizeof (s));
 
-  data[writerIndex++] = (char) (s >> 8);
-  data[writerIndex++] = (char) (s & 255);
+  bytes[wIndex++] = (char) (s >> 8);
+  bytes[wIndex++] = (char) (s & 255);
 }
 
 void Buf::write(int i)
 {
   checkWriteBound(sizeof (i));
 
-  data[writerIndex++] = (char) (i >> 24);
-  data[writerIndex++] = (char) ((i >> 16) & 255);
-  data[writerIndex++] = (char) ((i >> 8) & 255);
-  data[writerIndex++] = (char) (i & 255);
+  bytes[wIndex++] = (char) (i >> 24);
+  bytes[wIndex++] = (char) ((i >> 16) & 255);
+  bytes[wIndex++] = (char) ((i >> 8) & 255);
+  bytes[wIndex++] = (char) (i & 255);
 }
 
 void Buf::write(long long l)
 {
   checkWriteBound(sizeof (l));
 
-  data[writerIndex++] = (char) ((l >> 56));
-  data[writerIndex++] = (char) ((l >> 48) & 255);
-  data[writerIndex++] = (char) ((l >> 40) & 255);
-  data[writerIndex++] = (char) ((l >> 32) & 255);
-  data[writerIndex++] = (char) ((l >> 24) & 255);
-  data[writerIndex++] = (char) ((l >> 16) & 255);
-  data[writerIndex++] = (char) ((l >> 8) & 255);
-  data[writerIndex++] = (char) (l & 255);
+  bytes[wIndex++] = (char) ((l >> 56));
+  bytes[wIndex++] = (char) ((l >> 48) & 255);
+  bytes[wIndex++] = (char) ((l >> 40) & 255);
+  bytes[wIndex++] = (char) ((l >> 32) & 255);
+  bytes[wIndex++] = (char) ((l >> 24) & 255);
+  bytes[wIndex++] = (char) ((l >> 16) & 255);
+  bytes[wIndex++] = (char) ((l >> 8) & 255);
+  bytes[wIndex++] = (char) (l & 255);
 }
 
 void Buf::write(float f)
@@ -81,8 +85,8 @@ void Buf::write(float f)
   checkWriteBound(sizeof (f));
 
   char* cs = reinterpret_cast<char*> (&f);
-  memcpy(data + writerIndex, cs, sizeof (f));
-  writerIndex += sizeof (f);
+  memcpy(bytes + wIndex, cs, sizeof (f));
+  wIndex += sizeof (f);
 }
 
 void Buf::write(double d)
@@ -90,8 +94,8 @@ void Buf::write(double d)
   checkWriteBound(sizeof (d));
 
   char* cs = reinterpret_cast<char*> (&d);
-  memcpy(data + writerIndex, cs, sizeof (d));
-  writerIndex += sizeof (d);
+  memcpy(bytes + wIndex, cs, sizeof (d));
+  wIndex += sizeof (d);
 }
 
 void Buf::write(char* s)
@@ -104,13 +108,21 @@ void Buf::write(char* s, size_t length)
   checkWriteBound(sizeof (int) +length);
 
   write((int) length);
-  memcpy(data + writerIndex, s, length);
+  memcpy(bytes + wIndex, s, length);
+  wIndex += length;
 }
 
 void Buf::write(std::string s)
 {
   write((char*) s.c_str(), s.length());
 }
+
+void Buf::write(Buf *b)
+{
+  write(b->data(), b->writerIndex());
+}
+
+//read functions
 
 bool Buf::readBool()
 {
@@ -120,39 +132,39 @@ bool Buf::readBool()
 char Buf::readChar()
 {
   checkReadBound(sizeof (char));
-  return data[readerIndex++];
+  return bytes[rIndex++];
 }
 
 short Buf::readShort()
 {
   checkReadBound(sizeof (short));
 
-  return data[readerIndex++] << 8 |
-          data[readerIndex++];
+  return bytes[rIndex++] << 8 |
+          bytes[rIndex++];
 }
 
 int Buf::readInt()
 {
   checkReadBound(sizeof (int));
 
-  return data[readerIndex++] << 24 |
-          data[readerIndex++] << 16 |
-          data[readerIndex++] << 8 |
-          data[readerIndex++];
+  return bytes[rIndex++] << 24 |
+          bytes[rIndex++] << 16 |
+          bytes[rIndex++] << 8 |
+          bytes[rIndex++];
 }
 
 long long Buf::readLong()
 {
   checkReadBound(sizeof (long long));
 
-  return ((long)data[readerIndex++]) << 56 |
-          ((long)data[readerIndex++]) << 48 |
-          ((long)data[readerIndex++]) << 40 |
-          ((long)data[readerIndex++]) << 32 |
-          ((long)data[readerIndex++]) << 24 |
-          ((long)data[readerIndex++]) << 16 |
-          ((long)data[readerIndex++]) << 8 |
-          ((long)data[readerIndex++]);
+  return ((long) bytes[rIndex++]) << 56 |
+          ((long) bytes[rIndex++]) << 48 |
+          ((long) bytes[rIndex++]) << 40 |
+          ((long) bytes[rIndex++]) << 32 |
+          ((long) bytes[rIndex++]) << 24 |
+          ((long) bytes[rIndex++]) << 16 |
+          ((long) bytes[rIndex++]) << 8 |
+          ((long) bytes[rIndex++]);
 }
 
 float Buf::readFloat()
@@ -160,8 +172,8 @@ float Buf::readFloat()
   checkReadBound(sizeof (float));
 
   char cs[sizeof (float)];
-  memcpy(cs, data + readerIndex, sizeof (float));
-  readerIndex += sizeof (float);
+  memcpy(cs, bytes + rIndex, sizeof (float));
+  rIndex += sizeof (float);
   return *reinterpret_cast<float*> (cs);
 }
 
@@ -170,8 +182,8 @@ double Buf::readDouble()
   checkReadBound(sizeof (double));
 
   char cs[sizeof (double)];
-  memcpy(cs, data + readerIndex, sizeof (double));
-  readerIndex += sizeof (double);
+  memcpy(cs, bytes + rIndex, sizeof (double));
+  rIndex += sizeof (double);
   return *reinterpret_cast<double*> (cs);
 }
 
@@ -182,14 +194,33 @@ string *Buf::readString()
 
   char str[len + 1];
   str[len] = '\0';
-  memcpy(str, data + readerIndex, len);
-  readerIndex += len;
+  memcpy(str, bytes + rIndex, len);
+  rIndex += len;
   return new string(str);
 }
 
+//index functions
+
+size_t Buf::readerIndex()
+{
+  return rIndex;
+}
+
+size_t Buf::writerIndex()
+{
+  return wIndex;
+}
+
+char *Buf::data()
+{
+  return bytes;
+}
+
+//bounds check functions
+
 void Buf::checkWriteBound(size_t neededspace)
 {
-  if (writerIndex + neededspace >= allocedSize)
+  if (wIndex + neededspace >= allocedSize)
   {
     char *data = (char*) realloc(data, allocedSize + MEMBLOCK);
     if (data == NULL)
@@ -201,8 +232,8 @@ void Buf::checkWriteBound(size_t neededspace)
 
 void Buf::checkReadBound(size_t neededspace)
 {
-  if (readerIndex + neededspace > writerIndex)
+  if (rIndex + neededspace > wIndex)
   {
-    //throw index outof bound exception
+    throw IndexOutOfBoundsException(rIndex + neededspace, wIndex);
   }
 }

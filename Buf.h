@@ -8,9 +8,8 @@
 #ifndef BUF_H
 #define	BUF_H
 
-//#define uint unsigned int
 #include <string>
-#include <stdlib.h>
+#include <cstdlib>
 
 class Buf
 {
@@ -18,6 +17,7 @@ public:
   Buf();
   Buf(size_t initialSize);
 
+//write functions
   void write(bool b);
   void write(char c);
   void write(short s);
@@ -28,7 +28,9 @@ public:
   void write(char* s);
   void write(char* s, size_t length);
   void write(std::string s);
-  
+  void write(Buf *b);
+
+//read functions
   bool readBool();
   char readChar();
   short readShort();
@@ -37,16 +39,22 @@ public:
   float readFloat();
   double readDouble();
   std::string *readString();
+
+//index funtions
+  size_t readerIndex();
+  size_t writerIndex();
   
-  void checkWriteBound(size_t neededspace);
-  void checkReadBound(size_t neededspace);
+  char* data();
 private:
   Buf(const Buf& orig);
   virtual ~Buf();
+  
+  void checkWriteBound(size_t neededspace);
+  void checkReadBound(size_t neededspace);
 
-  char* data;
-  size_t readerIndex;
-  size_t writerIndex;
+  char* bytes;
+  size_t rIndex;
+  size_t wIndex;
   size_t allocedSize;
 };
 
