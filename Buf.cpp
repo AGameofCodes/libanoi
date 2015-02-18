@@ -15,13 +15,11 @@
 using std::string;
 using std::bad_alloc;
 
-
-
 Buf::Buf() : Buf(MEMBLOCK)
 {
 }
 
-Buf::Buf(size_t initialSize) : bytes((char*) malloc(initialSize)), rIndex(0), wIndex(0), allocedSize(initialSize)
+Buf::Buf(size_t capacity) : bytes((char*) malloc(capacity)), rIndex(0), wIndex(0), cap(capacity)
 {
 }
 
@@ -211,6 +209,25 @@ size_t Buf::writerIndex()
   return wIndex;
 }
 
+size_t Buf::capacity()
+{
+  return cap;
+}
+
+void Buf::capacity(size_t newcapacity)
+{
+  if (wIndex >= newcapacity)
+  {
+    throw IndexOutOfBoundsException(wIndex, newcapacity);
+  }
+
+  bytes = (char*) realloc(bytes, newcapacity);
+  if (bytes == NULL)
+  {
+    throw bad_alloc();
+  }
+}
+
 char *Buf::data()
 {
   return bytes;
@@ -220,13 +237,9 @@ char *Buf::data()
 
 void Buf::checkWriteBound(size_t neededspace)
 {
-  if (wIndex + neededspace >= allocedSize)
+  if (wIndex + neededspace >= cap)
   {
-    char *data = (char*) realloc(data, allocedSize + MEMBLOCK);
-    if (data == NULL)
-    {
-      throw bad_alloc();
-    }
+    throw IndexOutOfBoundsException(wIndex + neededspace, cap);
   }
 }
 

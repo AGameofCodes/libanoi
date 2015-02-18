@@ -15,7 +15,7 @@ class Buf
 {
 public:
   Buf();
-  Buf(size_t initialSize);
+  Buf(size_t capacity);
 
 //write functions
   void write(bool b);
@@ -43,6 +43,8 @@ public:
 //index funtions
   size_t readerIndex();
   size_t writerIndex();
+  size_t capacity();
+  void capacity(size_t newcapacity);
   
   char* data();
 private:
@@ -55,7 +57,7 @@ private:
   char* bytes;
   size_t rIndex;
   size_t wIndex;
-  size_t allocedSize;
+  size_t cap;
 };
 
 #endif	/* BUF_H */
