@@ -16,6 +16,7 @@ class Buf
 public:
   Buf();
   Buf(size_t capacity);
+  virtual ~Buf();
 
 //write functions
   void write(bool b);
@@ -57,7 +58,7 @@ public:
   char* data();
 private:
   Buf(const Buf& orig);
-  virtual ~Buf();
+  
   
   void checkWriteBound(size_t neededspace);
   void checkReadBound(size_t neededspace);
