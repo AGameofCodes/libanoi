@@ -228,6 +228,38 @@ void Buf::capacity(size_t newcapacity)
   }
 }
 
+size_t Buf::markReaderIndex()
+{
+  mrIndex = rIndex;
+  return mrIndex;
+}
+
+size_t Buf::markWriterIndex()
+{
+  mwIndex = wIndex;
+  return mwIndex;
+}
+
+size_t Buf::resetReaderIndex()
+{
+  rIndex = mrIndex;
+}
+
+size_t Buf::resetWriterIndex()
+{
+  wIndex = mwIndex;
+}
+
+size_t Buf::readableBytes()
+{
+  return wIndex - rIndex;
+}
+
+size_t Buf::writableBytes()
+{
+  return cap - wIndex;
+}
+
 char *Buf::data()
 {
   return bytes;

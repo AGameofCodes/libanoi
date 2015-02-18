@@ -46,6 +46,14 @@ public:
   size_t capacity();
   void capacity(size_t newcapacity);
   
+  size_t markReaderIndex();
+  size_t markWriterIndex();
+  size_t resetReaderIndex();
+  size_t resetWriterIndex();
+  
+  size_t readableBytes();
+  size_t writableBytes();
+  
   char* data();
 private:
   Buf(const Buf& orig);
@@ -58,6 +66,9 @@ private:
   size_t rIndex;
   size_t wIndex;
   size_t cap;
+  
+  size_t mrIndex;
+  size_t mwIndex;
 };
 
 #endif	/* BUF_H */
