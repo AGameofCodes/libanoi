@@ -246,6 +246,11 @@ size_t Buf::resetWriterIndex()
   wIndex = mwIndex;
 }
 
+size_t Buf::discardableBytes()
+{
+  return rIndex;
+}
+
 size_t Buf::readableBytes()
 {
   return wIndex - rIndex;
@@ -254,6 +259,15 @@ size_t Buf::readableBytes()
 size_t Buf::writableBytes()
 {
   return cap - wIndex;
+}
+
+size_t Buf::discardReadBytes()
+{
+  size_t discarded = discardableBytes();
+  memmove(bytes, bytes + rIndex, rIndex);
+  rIndex -= discarded;
+  wIndex -= discarded;
+  return discarded;
 }
 
 char *Buf::data()

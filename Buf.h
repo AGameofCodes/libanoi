@@ -53,8 +53,11 @@ public:
   size_t resetReaderIndex();
   size_t resetWriterIndex();
   
+  size_t discardableBytes();
   size_t readableBytes();
   size_t writableBytes();
+  
+  size_t discardReadBytes();
   
   char* data();
 private:
