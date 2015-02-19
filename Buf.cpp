@@ -23,10 +23,6 @@ Buf::Buf(size_t capacity) : bytes((char*) malloc(capacity)), rIndex(0), wIndex(0
 {
 }
 
-Buf::Buf(const Buf& orig)
-{
-}
-
 Buf::~Buf()
 {
   free(bytes);
